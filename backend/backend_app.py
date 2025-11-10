@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # This will enable CORS for all routes
+CORS(app)
 
 POSTS = [
     {"id": 1, "title": "First post", "content": "This is the first post."},
@@ -41,7 +41,7 @@ def post_posts():
 
 
 def find_post_by_id(post_id):
-  """ Find the post with the id `post_id`.
+  """ Find the post with the id 'post_id'.
   If there is no post with this id, return None. """
   for post in POSTS:
     if post["id"] == post_id:
@@ -82,6 +82,29 @@ def update_posts(id):
 
     # Successful answer
     return jsonify({"id": id, "title": new_title, "content": new_content}), 200
+
+
+@app.route('/api/posts/search', methods=['GET'])
+def search_posts():
+    # Query-Parameter
+    title_query = request.args.get('title', '').lower()
+    content_query = request.args.get('content', '').lower()
+
+    # If neither title nor content parameters are specified return empty list
+    if not title_query and not content_query:
+        return jsonify([])
+
+    # Filtering posts, that includes query parameter
+    results = []
+    for post in POSTS:
+        matches_title = title_query and title_query in post['title'].lower()
+        matches_content = content_query and content_query in post['content'].lower()
+
+        # Append only, if at least one condition is met
+        if matches_title or matches_content:
+            results.append(post)
+
+    return jsonify(results), 200
 
 
 if __name__ == '__main__':
